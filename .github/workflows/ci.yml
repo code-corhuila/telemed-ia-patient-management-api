@@ -10,6 +10,7 @@ on:
       - 'feat/**'
       - 'fix/**'
       - 'release/**'
+      - 'hotfix/**'
   pull_request:
     branches:
       - develop
