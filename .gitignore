@@ -1,0 +1,23 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Java / Maven
+target/
+*.class
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
