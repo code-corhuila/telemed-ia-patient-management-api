@@ -93,6 +93,20 @@ class PatientTest {
         assertThat(patient.getUpdatedAt()).isEqualTo(patient.getDeletedAt());
     }
 
+        @Test
+    @DisplayName("softDelete: should be idempotent")
+    void softDeleteShouldBeIdempotent() {
+        Patient patient = Patient.createNew(42L);
+
+        patient.softDelete();
+        OffsetDateTime firstDeletedAt = patient.getDeletedAt();
+
+        
+        patient.softDelete();
+
+        assertThat(patient.getDeletedAt()).isEqualTo(firstDeletedAt);
+    }
+
     @Test
     @DisplayName("reconstitute: should rebuild the aggregate from persisted values")
     void shouldReconstitutePatient() {
