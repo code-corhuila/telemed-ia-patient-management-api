@@ -26,15 +26,32 @@ class GetPatientProfileUseCaseTest {
         useCase = new GetPatientProfileUseCase(patientRepository);
     }
 
-    @Test
-    @DisplayName("getByUserId: should return the patient profile when found")
-    void shouldReturnPatientProfile() {
-        Patient patient = Patient.createNew(42L);
+        @Test
+    @DisplayName("getByUserId: should map all fields from the domain aggregate")
+    void shouldReturnPatientProfileWithAllFieldsMapped() {
+        Patient patient = Patient.reconstitute(
+                1L,
+                42L,
+                LocalDate.of(1990, 5, 15),
+                "3001234567",
+                "Hypertension",
+                "No known allergies",
+                OffsetDateTime.now().minusDays(10),
+                OffsetDateTime.now().minusDays(2),
+                null
+        );
         when(patientRepository.findByUserId(42L)).thenReturn(Optional.of(patient));
 
         PatientResponse response = useCase.getByUserId(42L);
 
+        assertThat(response.id()).isEqualTo(1L);
         assertThat(response.userId()).isEqualTo(42L);
+        assertThat(response.birthDate()).isEqualTo(LocalDate.of(1990, 5, 15));
+        assertThat(response.phone()).isEqualTo("3001234567");
+        assertThat(response.medicalHistory()).isEqualTo("Hypertension");
+        assertThat(response.description()).isEqualTo("No known allergies");
+        assertThat(response.createdAt()).isNotNull();
+        assertThat(response.updatedAt()).isNotNull();
     }
 
     @Test
