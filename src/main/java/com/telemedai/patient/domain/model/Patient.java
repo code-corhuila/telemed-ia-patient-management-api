@@ -93,8 +93,15 @@ public class Patient {
     /**
      * Marks the patient as soft-deleted.
      * The record remains in the database with a `deletedAt` timestamp.
+     *
+     * Idempotent: calling this method on an already-deleted patient is a no-op.
+     * This preserves the original deletion timestamp if a retry or a duplicate
+     * request reaches the aggregate.
      */
     public void softDelete() {
+        if (this.deletedAt != null) {
+            return;
+        }
         this.deletedAt = OffsetDateTime.now();
         this.updatedAt = this.deletedAt;
     }
