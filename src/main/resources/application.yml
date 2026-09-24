@@ -3,9 +3,9 @@ spring:
     name: telemed-ia-patient-management-api
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:telemed_patient_db}
-    username: ${DB_USER:telemed_patient_user}
-    password: ${DB_PASSWORD:telemed_patient_password}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   # Note: ddl-auto is set to "validate". The schema is provisioned by the
