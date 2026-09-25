@@ -10,14 +10,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Minimal Spring Security configuration.
+ * Spring Security configuration for the Patient Management API.
  *
  * - Stateless (no sessions, no CSRF since this is a token-based API).
  * - `/actuator/health` is public.
  * - Everything else requires an authenticated principal (injected by
  *   `GatewayTrustFilter`).
- *
- * PR #7b will expand this with formal role-based authorization and tests.
+ * - Method-level authorization is enabled via `@EnableMethodSecurity`;
+ *   endpoints declare their required role with `@PreAuthorize`.
  */
 @Configuration
 @EnableMethodSecurity
