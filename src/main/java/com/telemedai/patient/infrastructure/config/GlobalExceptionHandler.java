@@ -58,19 +58,16 @@ public class GlobalExceptionHandler {
                 "One or more fields are invalid", details);
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(
-            HttpStatus status,
-            String errorCode,
-            String message,
-            List<Map<String, String>> details
-    ) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("error", errorCode);
-        body.put("message", message);
-        if (details != null) {
-            body.put("details", details);
-        }
-        body.put("traceId", "n/a"); // Placeholder until a correlationId filter is added
-        return ResponseEntity.status(status).body(body);
+    @ExceptionHandler(org.springframework.web.bind.MissingRequestHeaderException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingHeader(
+            org.springframework.web.bind.MissingRequestHeaderException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "MISSING_HEADER",
+                "Missing required header: " + ex.getHeaderName(), null);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
+                "An unexpected error occurred", null);
     }
 }
