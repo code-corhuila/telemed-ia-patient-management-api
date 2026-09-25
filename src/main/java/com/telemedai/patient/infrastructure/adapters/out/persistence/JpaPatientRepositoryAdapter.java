@@ -34,6 +34,6 @@ class JpaPatientRepositoryAdapter implements PatientRepositoryPort {
 
     @Override
     public Optional<Patient> findByUserId(Long userId) {
-        return repository.findByUserId(userId).map(mapper::toDomain);
+        return repository.findByUserIdAndDeletedAtIsNull(userId).map(mapper::toDomain);
     }
 }
