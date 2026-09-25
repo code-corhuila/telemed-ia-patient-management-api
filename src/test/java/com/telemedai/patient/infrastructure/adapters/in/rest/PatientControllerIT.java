@@ -66,6 +66,9 @@ class PatientControllerIT {
     void getMyProfile() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("X-User-Id", 1001L))
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "PATIENT")
+                        .header("X-Gateway-Secret", "local-dev-secret")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId", is(1001)))
                 .andExpect(jsonPath("$.id", notNullValue()));
@@ -76,6 +79,9 @@ class PatientControllerIT {
     void getMyProfileNotFound() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("X-User-Id", 9999L))
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "PATIENT")
+                        .header("X-Gateway-Secret", "local-dev-secret")
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", is("NOT_FOUND")));
     }
@@ -96,6 +102,9 @@ class PatientControllerIT {
                         .header("X-User-Id", 1001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "PATIENT")
+                        .header("X-Gateway-Secret", "local-dev-secret")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.phone", is("3001234567")))
                 .andExpect(jsonPath("$.medicalHistory", is("Hypertension")));
@@ -115,7 +124,27 @@ class PatientControllerIT {
                         .header("X-User-Id", 1001L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "PATIENT")
+                        .header("X-Gateway-Secret", "local-dev-secret")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("VALIDATION_ERROR")));
+    }
+
+        @Test
+    @DisplayName("GET /api/patients/me: should return 401 without gateway secret")
+    void shouldReturnUnauthorizedWithoutGatewaySecret() throws Exception {
+        mockMvc.perform(get("/api/patients/me")
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "PATIENT"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET /api/patients/me: should return 401 without authenticated identity")
+    void shouldReturnUnauthorizedWithoutIdentity() throws Exception {
+        mockMvc.perform(get("/api/patients/me")
+                        .header("X-Gateway-Secret", "local-dev-secret"))
+                .andExpect(status().isUnauthorized());
     }
 }
