@@ -12,5 +12,5 @@ import java.util.Optional;
  */
 interface SpringDataPatientRepository extends JpaRepository<JpaPatientEntity, Long> {
 
-    Optional<JpaPatientEntity> findByUserId(Long userId);
+        Optional<JpaPatientEntity> findByUserIdAndDeletedAtIsNull(Long userId);
 }
