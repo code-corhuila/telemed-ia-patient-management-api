@@ -5,6 +5,7 @@ import com.telemedai.patient.infrastructure.adapters.out.persistence.JpaPatientR
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -78,5 +80,43 @@ class PatientControllerAuthorizationIT {
                         .header("X-User-Id", 1001L)
                         .header("X-User-Role", "PATIENT"))
                 .andExpect(status().isOk());
+    }
+
+        @Test
+    @DisplayName("PUT /me: should return 403 when the role is ADMIN")
+    void shouldForbidAdminRoleOnPut() throws Exception {
+        String body = """
+                {
+                    "birthDate": "1990-05-15",
+                    "phone": "3001234567"
+                }
+                """;
+
+        mockMvc.perform(put("/api/patients/me")
+                        .header("X-Gateway-Secret", "local-dev-secret")
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "ADMIN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PUT /me: should return 403 when the role is PROFESSIONAL")
+    void shouldForbidProfessionalRoleOnPut() throws Exception {
+        String body = """
+                {
+                    "birthDate": "1990-05-15",
+                    "phone": "3001234567"
+                }
+                """;
+
+        mockMvc.perform(put("/api/patients/me")
+                        .header("X-Gateway-Secret", "local-dev-secret")
+                        .header("X-User-Id", 1001L)
+                        .header("X-User-Role", "PROFESSIONAL")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isForbidden());
     }
 }
