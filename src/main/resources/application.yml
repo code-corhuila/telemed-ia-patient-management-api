@@ -39,4 +39,4 @@ logging:
 
 app:
   security:
-    gateway-secret: ${GATEWAY_SECRET:local-dev-secret}
+    gateway-secret: ${GATEWAY_SECRET}
