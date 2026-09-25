@@ -238,4 +238,12 @@ public class JpaPatientEntity {
     public void setDeletedAt(OffsetDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
+
+        public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

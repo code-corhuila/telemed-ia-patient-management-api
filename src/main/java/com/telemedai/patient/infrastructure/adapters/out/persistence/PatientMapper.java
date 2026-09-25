@@ -35,6 +35,8 @@ class PatientMapper {
         entity.setPhone(patient.getPhone());
         entity.setMedicalHistory(patient.getMedicalHistory());
         entity.setDescription(patient.getDescription());
+        entity.setCreatedAt(patient.getCreatedAt());
+        entity.setUpdatedAt(patient.getUpdatedAt());
         entity.setDeletedAt(patient.getDeletedAt());
         return entity;
     }
