@@ -36,3 +36,7 @@ logging:
   level:
     root: INFO
     com.telemedai.patient: DEBUG
+
+app:
+  security:
+    gateway-secret: ${GATEWAY_SECRET:local-dev-secret}
