@@ -1,4 +1,4 @@
-package com.telemedai.patient.infrastructure.config;
+package com.telemedai.patient.infrastructure.adapters.in.rest.error;
 
 import com.telemedai.patient.domain.exception.DomainException;
 import com.telemedai.patient.domain.exception.InvalidBirthDateException;
