@@ -9,6 +9,7 @@ import com.telemedai.patient.infrastructure.config.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,6 +39,7 @@ public class PatientController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<PatientResponse> getMyProfile(
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
@@ -45,6 +47,7 @@ public class PatientController {
     }
 
     @PutMapping("/me")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<PatientResponse> updateMyProfile(
             @AuthenticationPrincipal AuthenticatedUser user,
             @Valid @RequestBody UpdatePatientProfileRequest request
