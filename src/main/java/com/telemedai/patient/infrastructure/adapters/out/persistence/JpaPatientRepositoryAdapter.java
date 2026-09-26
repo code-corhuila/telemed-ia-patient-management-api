@@ -14,7 +14,7 @@ import java.util.Optional;
  * translated to and from a JPA entity.
  */
 @Component
-class JpaPatientRepositoryAdapter implements PatientRepositoryPort {
+public class JpaPatientRepositoryAdapter implements PatientRepositoryPort {
 
     private final SpringDataPatientRepository repository;
     private final PatientMapper mapper;
