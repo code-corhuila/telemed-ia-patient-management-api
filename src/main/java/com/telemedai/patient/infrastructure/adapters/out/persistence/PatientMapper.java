@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
  * sides of the boundary. The domain stays unaware of JPA.
  */
 @Component
-class PatientMapper {
+public class PatientMapper {
 
-    Patient toDomain(JpaPatientEntity entity) {
+    public Patient toDomain(JpaPatientEntity entity) {
         return Patient.reconstitute(
                 entity.getId(),
                 entity.getUserId(),
@@ -27,7 +27,7 @@ class PatientMapper {
         );
     }
 
-    JpaPatientEntity toEntity(Patient patient) {
+    public JpaPatientEntity toEntity(Patient patient) {
         JpaPatientEntity entity = new JpaPatientEntity();
         entity.setId(patient.getId());
         entity.setUserId(patient.getUserId());
