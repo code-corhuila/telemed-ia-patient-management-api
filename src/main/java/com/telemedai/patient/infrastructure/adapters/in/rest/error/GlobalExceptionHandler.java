@@ -3,16 +3,16 @@ package com.telemedai.patient.infrastructure.adapters.in.rest.error;
 import com.telemedai.patient.domain.exception.DomainException;
 import com.telemedai.patient.domain.exception.InvalidBirthDateException;
 import com.telemedai.patient.domain.exception.PatientNotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,9 +63,8 @@ public class GlobalExceptionHandler {
                 "One or more fields are invalid", details);
     }
 
-    @ExceptionHandler(org.springframework.web.bind.MissingRequestHeaderException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingHeader(
-            org.springframework.web.bind.MissingRequestHeaderException ex) {
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingHeader(MissingRequestHeaderException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "MISSING_HEADER",
                 "Missing required header: " + ex.getHeaderName(), null);
     }
@@ -79,7 +78,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+        log.error("Unexpected error", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
                 "An unexpected error occurred", null);
+    }
+
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status,
+            String errorCode,
+            String message,
+            List<Map<String, String>> details
+    ) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", errorCode);
+        body.put("message", message);
+        if (details != null) {
+            body.put("details", details);
+        }
+        body.put("traceId", "n/a"); // Placeholder until a correlationId filter is added
+        return ResponseEntity.status(status).body(body);
     }
 }
