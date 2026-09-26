@@ -57,7 +57,7 @@ class PatientControllerAuthorizationIT {
     void shouldForbidAdminRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("X-Gateway-Secret", "local-dev-secret")
-                        .header("X-User-Id", 1001L)
+                        .header("X-User-Id", "1001")
                         .header("X-User-Role", "ADMIN"))
                 .andExpect(status().isForbidden());
     }
@@ -67,7 +67,7 @@ class PatientControllerAuthorizationIT {
     void shouldForbidProfessionalRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("X-Gateway-Secret", "local-dev-secret")
-                        .header("X-User-Id", 1001L)
+                        .header("X-User-Id", "1001")
                         .header("X-User-Role", "PROFESSIONAL"))
                 .andExpect(status().isForbidden());
     }
@@ -77,7 +77,7 @@ class PatientControllerAuthorizationIT {
     void shouldAllowPatientRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("X-Gateway-Secret", "local-dev-secret")
-                        .header("X-User-Id", 1001L)
+                        .header("X-User-Id", "1001")
                         .header("X-User-Role", "PATIENT"))
                 .andExpect(status().isOk());
     }
@@ -94,7 +94,7 @@ class PatientControllerAuthorizationIT {
 
         mockMvc.perform(put("/api/patients/me")
                         .header("X-Gateway-Secret", "local-dev-secret")
-                        .header("X-User-Id", 1001L)
+                        .header("X-User-Id", "1001")
                         .header("X-User-Role", "ADMIN")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -113,7 +113,7 @@ class PatientControllerAuthorizationIT {
 
         mockMvc.perform(put("/api/patients/me")
                         .header("X-Gateway-Secret", "local-dev-secret")
-                        .header("X-User-Id", 1001L)
+                        .header("X-User-Id", "1001")
                         .header("X-User-Role", "PROFESSIONAL")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))

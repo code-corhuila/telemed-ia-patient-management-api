@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +28,7 @@ class GetPatientProfileUseCaseTest {
         useCase = new GetPatientProfileUseCase(patientRepository);
     }
 
-        @Test
+    @Test
     @DisplayName("getByUserId: should map all fields from the domain aggregate")
     void shouldReturnPatientProfileWithAllFieldsMapped() {
         Patient patient = Patient.reconstitute(
