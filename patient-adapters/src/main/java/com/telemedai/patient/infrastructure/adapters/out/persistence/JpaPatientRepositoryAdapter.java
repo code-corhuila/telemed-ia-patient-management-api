@@ -2,17 +2,12 @@ package com.telemedai.patient.infrastructure.adapters.out.persistence;
 
 import com.telemedai.patient.application.ports.out.PatientRepositoryPort;
 import com.telemedai.patient.domain.model.Patient;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
-/**
- * Persistence adapter that implements the application output port
- * `PatientRepositoryPort` using Spring Data JPA.
- *
- * This is the only place in the codebase where the domain aggregate is
- * translated to and from a JPA entity.
- */
 @Component
 public class JpaPatientRepositoryAdapter implements PatientRepositoryPort {
 
@@ -35,5 +30,23 @@ public class JpaPatientRepositoryAdapter implements PatientRepositoryPort {
     @Override
     public Optional<Patient> findByUserId(Long userId) {
         return repository.findByUserIdAndDeletedAtIsNull(userId).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Patient> findById(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Patient> findAllActive(int offset, int limit) {
+        int page = offset / Math.max(limit, 1);
+        return repository.findActive(PageRequest.of(page, limit)).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countActive() {
+        return repository.countByDeletedAtIsNull();
     }
 }

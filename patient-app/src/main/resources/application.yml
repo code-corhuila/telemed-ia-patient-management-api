@@ -1,46 +1,46 @@
 spring:
   application:
     name: telemed-ia-patient-management-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:telemed_patient_db}
+    username: ${DB_USER:telemed_patient_user}
+    password: ${DB_PASSWORD:telemed_patient_password}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+      validation-timeout: 3000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      jakarta.persistence.query.timeout: 5000
   mvc:
     throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
-
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  # Note: ddl-auto is set to "validate". The schema is provisioned by the
-  # sibling repository telemed-ia-patient-management-db (Flyway migrations).
-  # This service does not create or migrate the schema itself.
-  jpa:
-    hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:validate}
-    show-sql: ${JPA_SHOW_SQL:false}
-    open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 5s
+    keep-alive-timeout: 15s
+    max-http-request-header-size: 8KB
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health
   endpoint:
     health:
-      show-details: when_authorized
-
-logging:
-  level:
-    root: INFO
-    com.telemedai.patient: DEBUG
+      show-details: never
 
 app:
   security:

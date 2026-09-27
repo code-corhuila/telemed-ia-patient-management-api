@@ -3,6 +3,7 @@ package com.telemedai.patient.infrastructure.adapters.in.rest.error;
 import com.telemedai.patient.application.ports.out.PatientNotFoundException;
 import com.telemedai.patient.domain.exception.DomainException;
 import com.telemedai.patient.domain.exception.InvalidBirthDateException;
+import com.telemedai.patient.domain.exception.InvalidIdempotencyKeyException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleInvalidBirthDate(InvalidBirthDateException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiError.of("BUSINESS_RULE_VIOLATION", ex.getMessage(), traceId()));
+    }
+
+    @ExceptionHandler(InvalidIdempotencyKeyException.class)
+    public ResponseEntity<ApiError> 	handleInvalidIdempotencyKey(InvalidIdempotencyKeyException ex) {
+        List<ApiError.Detail> details = List.of(
+                new ApiError.Detail("Idempotency-Key", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiError.of("VALIDATION_ERROR", "the request has invalid fields", details, traceId()));
     }
 
     @ExceptionHandler(DomainException.class)
