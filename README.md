@@ -29,9 +29,15 @@ Full policy: `00-governance/branching-policy.md` in `telemed-ia-docs`.
 The Patient Management **service API** for TeleMed IA.
 
 Exposes REST endpoints for patients to view and update their own profile. It is the runtime
+
+component that connects to its dedicated PostgreSQL database provisioned by the
+sibling repository `telemed-ia-patient-management-db` and enforces the domain rules of
+the Patient Management bounded context.
+
 component that connects to its own dedicated PostgreSQL database, whose schema is provisioned
 by the sibling repository [`telemed-ia-patient-management-db`](https://github.com/code-corhuila/telemed-ia-patient-management-db).
 The service enforces the domain rules of the Patient Management bounded context.
+
 
 ## Stack
 
