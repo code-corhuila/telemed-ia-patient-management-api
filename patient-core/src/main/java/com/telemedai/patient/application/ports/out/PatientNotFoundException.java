@@ -1,4 +1,6 @@
-package com.telemedai.patient.domain.exception;
+package com.telemedai.patient.application.ports.out;
+
+import com.telemedai.patient.domain.exception.DomainException;
 
 /**
  * Thrown when a patient cannot be found for a given user identifier.
