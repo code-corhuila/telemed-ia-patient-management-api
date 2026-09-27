@@ -30,11 +30,13 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.is;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -112,7 +114,10 @@ class PatientControllerAuthorizationIT {
     void shouldForbidAdminRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("Authorization", "Bearer " + jwt("1001", "ADMIN")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error", is("FORBIDDEN")))
+                .andExpect(jsonPath("$.traceId", notNullValue()))
+                .andExpect(header().exists("X-Correlation-Id"));
     }
 
     @Test
@@ -120,7 +125,8 @@ class PatientControllerAuthorizationIT {
     void shouldForbidProfessionalRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("Authorization", "Bearer " + jwt("1001", "PROFESSIONAL")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error", is("FORBIDDEN")));
     }
 
     @Test
@@ -136,7 +142,9 @@ class PatientControllerAuthorizationIT {
     void shouldReturn401WithoutToken() throws Exception {
         mockMvc.perform(get("/api/patients/me"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error", is("UNAUTHORIZED")));
+                .andExpect(jsonPath("$.error", is("UNAUTHORIZED")))
+                .andExpect(jsonPath("$.traceId", notNullValue()))
+                .andExpect(header().exists("X-Correlation-Id"));
     }
 
     @Test
@@ -164,7 +172,8 @@ class PatientControllerAuthorizationIT {
                         .header("Authorization", "Bearer " + jwt("1001", "ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error", is("FORBIDDEN")));
     }
 
     @Test

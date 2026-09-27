@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import com.telemedai.patient.application.dto.PatientResponse;
 import com.telemedai.patient.application.ports.in.GetPatientProfilePort;
 import com.telemedai.patient.application.ports.out.PatientRepositoryPort;
-import com.telemedai.patient.domain.exception.PatientNotFoundException;
+import com.telemedai.patient.application.ports.out.PatientNotFoundException;
 import com.telemedai.patient.domain.model.Patient;
 
 /**
