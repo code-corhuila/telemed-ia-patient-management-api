@@ -1,101 +1,100 @@
 package com.telemedai.patient.infrastructure.adapters.in.rest.error;
 
+import com.telemedai.patient.application.ports.out.PatientNotFoundException;
 import com.telemedai.patient.domain.exception.DomainException;
 import com.telemedai.patient.domain.exception.InvalidBirthDateException;
-import com.telemedai.patient.domain.exception.PatientNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-/**
- * Translates domain and validation exceptions into the standard HTTP error
- * response used across the project.
- *
- * Error format (see 07-api/contracts/openapi/_shared.yaml):
- * {
- *   "error": "...",
- *   "message": "...",
- *   "details": [...],
- *   "traceId": "..."
- * }
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(PatientNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handlePatientNotFound(PatientNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage(), null);
+    private String traceId() {
+        String id = org.slf4j.MDC.get(CorrelationFilter.MDC_KEY);
+        return id != null ? id : "unknown";
     }
 
+    // ---------- 400 VALIDATION_ERROR ----------
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
+        List<ApiError.Detail> details = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> new ApiError.Detail(fe.getField(), fe.getDefaultMessage()))
+                .toList();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiError.of("VALIDATION_ERROR", "the request has invalid fields", details, traceId()));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiError.of("VALIDATION_ERROR", "malformed JSON body", traceId()));
+    }
+
+    // ---------- 401 UNAUTHORIZED ----------
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(org.springframework.security.core.AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiError.of("UNAUTHORIZED", "missing or invalid token", traceId()));
+    }
+
+    // ---------- 403 FORBIDDEN ----------
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiError.of("FORBIDDEN", "insufficient permissions", traceId()));
+    }
+
+    // ---------- 404 NOT_FOUND ----------
+
+    @ExceptionHandler(PatientNotFoundException.class)
+    public ResponseEntity<ApiError> handlePatientNotFound(PatientNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiError.of("NOT_FOUND", ex.getMessage(), traceId()));
+    }
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ApiError> handleNoRoute(Exception ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiError.of("NOT_FOUND", "resource not found", traceId()));
+    }
+
+    // ---------- 422 BUSINESS_RULE_VIOLATION / INVALID_STATUS_TRANSITION ----------
+
     @ExceptionHandler(InvalidBirthDateException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidBirthDate(InvalidBirthDateException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), null);
+    public ResponseEntity<ApiError> handleInvalidBirthDate(InvalidBirthDateException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiError.of("BUSINESS_RULE_VIOLATION", ex.getMessage(), traceId()));
     }
 
     @ExceptionHandler(DomainException.class)
-    public ResponseEntity<Map<String, Object>> handleDomainException(DomainException ex) {
-        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "DOMAIN_ERROR", ex.getMessage(), null);
+    public ResponseEntity<ApiError> handleDomain(DomainException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiError.of("BUSINESS_RULE_VIOLATION", ex.getMessage(), traceId()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
-        List<Map<String, String>> details = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(err -> Map.of(
-                        "field", err.getField(),
-                        "message", err.getDefaultMessage() != null ? err.getDefaultMessage() : ""
-                ))
-                .toList();
-        return buildResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR",
-                "One or more fields are invalid", details);
-    }
-
-    @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingHeader(MissingRequestHeaderException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "MISSING_HEADER",
-                "Missing required header: " + ex.getHeaderName(), null);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
-        log.warn("Access denied: {}", ex.getMessage());
-        return buildResponse(HttpStatus.FORBIDDEN, "FORBIDDEN",
-                "You do not have permission to perform this operation", null);
-    }
+    // ---------- 500 INTERNAL_ERROR ----------
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
-        log.error("Unexpected error", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
-                "An unexpected error occurred", null);
-    }
-
-    private ResponseEntity<Map<String, Object>> buildResponse(
-            HttpStatus status,
-            String errorCode,
-            String message,
-            List<Map<String, String>> details
-    ) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("error", errorCode);
-        body.put("message", message);
-        if (details != null) {
-            body.put("details", details);
-        }
-        body.put("traceId", "n/a"); // Placeholder until a correlationId filter is added
-        return ResponseEntity.status(status).body(body);
+    public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest request) {
+        log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiError.of("INTERNAL_ERROR", "an unexpected error occurred", traceId()));
     }
 }

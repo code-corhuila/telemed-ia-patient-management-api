@@ -4,7 +4,7 @@ import com.telemedai.patient.application.dto.PatientResponse;
 import com.telemedai.patient.application.dto.UpdatePatientCommand;
 import com.telemedai.patient.application.ports.out.PatientRepositoryPort;
 import com.telemedai.patient.domain.exception.InvalidBirthDateException;
-import com.telemedai.patient.domain.exception.PatientNotFoundException;
+import com.telemedai.patient.application.ports.out.PatientNotFoundException;
 import com.telemedai.patient.domain.model.Patient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

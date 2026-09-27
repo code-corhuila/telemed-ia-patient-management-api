@@ -27,10 +27,13 @@ public class SecurityConfig {
             .addFilterBefore(new AuthFilter(verifier), UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
+                    String correlationId = (String) org.slf4j.MDC.get("correlationId");
+                    if (correlationId == null) correlationId = "unknown";
                     response.setStatus(401);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write(
-                        "{\"error\":\"UNAUTHORIZED\",\"message\":\"missing or invalid token\"}");
+                        "{\"error\":\"UNAUTHORIZED\",\"message\":\"missing or invalid token\","
+                        + "\"traceId\":\"" + correlationId + "\"}");
                 })
             );
         return http.build();
