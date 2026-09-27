@@ -1,42 +1,4 @@
-spring:
-  application:
-    name: telemed-ia-patient-management-api
-
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  # Note: ddl-auto is set to "validate". The schema is provisioned by the
-  # sibling repository telemed-ia-patient-management-db (Flyway migrations).
-  # This service does not create or migrate the schema itself.
-  jpa:
-    hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:validate}
-    show-sql: ${JPA_SHOW_SQL:false}
-    open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
-
-server:
-  port: ${SERVER_PORT:8080}
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: when_authorized
-
-logging:
-  level:
-    root: INFO
-    com.telemedai.patient: DEBUG
-
 app:
   security:
-    gateway-secret: ${GATEWAY_SECRET}
+    jwt:
+      public-key: ${JWT_PUBLIC_KEY}
