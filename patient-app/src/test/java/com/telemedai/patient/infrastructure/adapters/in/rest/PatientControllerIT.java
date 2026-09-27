@@ -38,6 +38,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -173,5 +175,34 @@ class PatientControllerIT {
         mockMvc.perform(get("/api/patients/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error", is("UNAUTHORIZED")));
+    }
+
+    @Test
+    @DisplayName("GET /me: preserves the incoming X-Correlation-Id")
+    void preserves_correlation_id_from_request() throws Exception {
+        mockMvc.perform(get("/api/patients/me")
+                        .header("X-Correlation-Id", "test-correlation-123")
+                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Correlation-Id", "test-correlation-123"));
+    }
+
+    @Test
+    @DisplayName("GET /me: generates an X-Correlation-Id when absent")
+    void generates_correlation_id_when_absent() throws Exception {
+        mockMvc.perform(get("/api/patients/me")
+                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT")))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Correlation-Id"));
+    }
+
+    @Test
+    @DisplayName("Unknown route returns 404 with the common envelope")
+    void unknown_route_returns_404_with_envelope() throws Exception {
+        mockMvc.perform(get("/api/does-not-exist"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error", is("NOT_FOUND")))
+                .andExpect(jsonPath("$.traceId", notNullValue()))
+                .andExpect(header().exists("X-Correlation-Id"));
     }
 }
