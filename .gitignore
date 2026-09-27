@@ -24,3 +24,7 @@ Thumbs.db
 
 # Maven multi-module
 **/target/
+
+# Local development artifacts
+keys/
+*.ps1
