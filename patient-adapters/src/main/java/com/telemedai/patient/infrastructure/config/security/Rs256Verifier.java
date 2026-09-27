@@ -6,6 +6,7 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
@@ -23,6 +24,7 @@ public class Rs256Verifier {
     private final RSAPublicKey publicKey;
     private final Clock clock;
 
+    @Autowired
     public Rs256Verifier(RSAPublicKey publicKey) {
         this(publicKey, Clock.systemUTC());
     }
