@@ -22,7 +22,9 @@ Thumbs.db
 # Docker
 *.pid
 
-*.pid
-
 # Maven multi-module
 **/target/
+
+# Local development artifacts
+keys/
+*.ps1
