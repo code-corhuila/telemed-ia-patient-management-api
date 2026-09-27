@@ -1,0 +1,27 @@
+name: telemed-ia-patient-management-api
+
+services:
+  patients-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: telemed-ia-patient-management-api:local
+    container_name: patients-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: patients-db
+      DB_PORT: "5432"
+      DB_NAME: ${PATIENT_DB_NAME:-telemed_patient_db}
+      DB_USER: ${PATIENT_DB_USER:-telemed_patient_user}
+      DB_PASSWORD: ${PATIENT_DB_PASSWORD:?PATIENT_DB_PASSWORD is required}
+      GATEWAY_SECRET: ${GATEWAY_SECRET:?GATEWAY_SECRET is required}
+      JPA_DDL_AUTO: validate
+    expose:
+      - "8080"
+    networks:
+      - platform
+
+networks:
+  platform:
+    external: true
+    name: platform
