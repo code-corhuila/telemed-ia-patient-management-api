@@ -14,7 +14,7 @@ services:
       DB_NAME: ${PATIENT_DB_NAME:-telemed_patient_db}
       DB_USER: ${PATIENT_DB_USER:-telemed_patient_user}
       DB_PASSWORD: ${PATIENT_DB_PASSWORD:?PATIENT_DB_PASSWORD is required}
-      GATEWAY_SECRET: ${GATEWAY_SECRET:?GATEWAY_SECRET is required}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:?JWT_PUBLIC_KEY is required}
       JPA_DDL_AUTO: validate
     expose:
       - "8080"

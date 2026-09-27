@@ -39,4 +39,5 @@ logging:
 
 app:
   security:
-    gateway-secret: ${GATEWAY_SECRET:local-dev-secret}
+    jwt:
+      public-key: ${JWT_PUBLIC_KEY}
