@@ -2,11 +2,12 @@ package com.telemedai.patient.domain.model;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 public record IdempotencyRecord(
         String key,
-        Long userId,
-        Long resourceId,
+        UUID userId,
+        UUID resourceId,
         OffsetDateTime createdAt
 ) {
     public IdempotencyRecord {
