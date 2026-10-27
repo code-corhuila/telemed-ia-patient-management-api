@@ -17,11 +17,14 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class Rs256VerifierTest {
+
+    private static final UUID USER_1001 = UUID.fromString("00000000-0000-0000-0000-000000001001");
 
     private static RSAPublicKey publicKey;
     private static RSAPrivateKey privateKey;
@@ -61,11 +64,11 @@ class Rs256VerifierTest {
     void accepts_valid_rs256_token() throws Exception {
         Clock clock = fixedClock();
         Rs256Verifier verifier = new Rs256Verifier(publicKey, clock);
-        String token = sign("1001", "PATIENT", clock.instant().plusSeconds(300), JWSAlgorithm.RS256, privateKey);
+        String token = sign(USER_1001.toString(), "PATIENT", clock.instant().plusSeconds(300), JWSAlgorithm.RS256, privateKey);
 
         AuthenticatedUser user = verifier.verify(token);
 
-        assertThat(user.userId()).isEqualTo(1001L);
+        assertThat(user.userId()).isEqualTo(USER_1001);
         assertThat(user.role()).isEqualTo("PATIENT");
     }
 
@@ -75,7 +78,7 @@ class Rs256VerifierTest {
         Rs256Verifier verifier = new Rs256Verifier(publicKey, clock);
 
         RSAPrivateKey alienKey = newPrivateKey();
-        String alienToken = sign("1001", "PATIENT", clock.instant().plusSeconds(300), JWSAlgorithm.RS256, alienKey);
+        String alienToken = sign(USER_1001.toString(), "PATIENT", clock.instant().plusSeconds(300), JWSAlgorithm.RS256, alienKey);
 
         assertThatThrownBy(() -> verifier.verify(alienToken))
                 .isInstanceOf(InvalidTokenException.class)
@@ -86,7 +89,7 @@ class Rs256VerifierTest {
     void rejects_expired_token() throws Exception {
         Clock clock = fixedClock();
         Rs256Verifier verifier = new Rs256Verifier(publicKey, clock);
-        String token = sign("1001", "PATIENT", clock.instant().minusSeconds(120), JWSAlgorithm.RS256, privateKey);
+        String token = sign(USER_1001.toString(), "PATIENT", clock.instant().minusSeconds(120), JWSAlgorithm.RS256, privateKey);
 
         assertThatThrownBy(() -> verifier.verify(token))
                 .isInstanceOf(InvalidTokenException.class)
@@ -99,7 +102,7 @@ class Rs256VerifierTest {
         Rs256Verifier verifier = new Rs256Verifier(publicKey, clock);
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .subject("1001")
+                .subject(USER_1001.toString())
                 .expirationTime(Date.from(clock.instant().plusSeconds(300)))
                 .build();
         SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
@@ -128,14 +131,14 @@ class Rs256VerifierTest {
     }
 
     @Test
-    void rejects_non_numeric_subject() throws Exception {
+    void rejects_non_uuid_subject() throws Exception {
         Clock clock = fixedClock();
         Rs256Verifier verifier = new Rs256Verifier(publicKey, clock);
-        String token = sign("not-a-number", "PATIENT", clock.instant().plusSeconds(300), JWSAlgorithm.RS256, privateKey);
+        String token = sign("not-a-uuid", "PATIENT", clock.instant().plusSeconds(300), JWSAlgorithm.RS256, privateKey);
 
         assertThatThrownBy(() -> verifier.verify(token))
                 .isInstanceOf(InvalidTokenException.class)
-                .hasMessageContaining("sub");
+                .hasMessageContaining("sub must be a UUID");
     }
 
     @Test

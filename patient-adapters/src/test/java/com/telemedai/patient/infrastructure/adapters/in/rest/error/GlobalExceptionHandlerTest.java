@@ -1,7 +1,6 @@
 package com.telemedai.patient.infrastructure.adapters.in.rest.error;
 
 import com.telemedai.patient.application.ports.out.PatientNotFoundException;
-import com.telemedai.patient.domain.exception.DomainException;
 import com.telemedai.patient.domain.exception.InvalidBirthDateException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -9,9 +8,13 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalExceptionHandlerTest {
+
+    private static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
@@ -23,7 +26,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void patientNotFound_maps_to_404() {
         MDC.put(CorrelationFilter.MDC_KEY, "corr-1");
-        ResponseEntity<ApiError> r = handler.handlePatientNotFound(new PatientNotFoundException(1L));
+        ResponseEntity<ApiError> r = handler.handlePatientNotFound(new PatientNotFoundException(USER_ID));
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(r.getBody().error()).isEqualTo("NOT_FOUND");
         assertThat(r.getBody().traceId()).isEqualTo("corr-1");
@@ -50,7 +53,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void missing_correlation_id_uses_unknown() {
-        ResponseEntity<ApiError> r = handler.handlePatientNotFound(new PatientNotFoundException(1L));
+        ResponseEntity<ApiError> r = handler.handlePatientNotFound(new PatientNotFoundException(USER_ID));
         assertThat(r.getBody().traceId()).isEqualTo("unknown");
     }
 }

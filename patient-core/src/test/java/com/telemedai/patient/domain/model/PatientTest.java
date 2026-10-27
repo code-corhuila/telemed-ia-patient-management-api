@@ -6,23 +6,23 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Unit tests for the Patient aggregate.
- * These tests do not require Spring, a database, or any infrastructure.
- */
 class PatientTest {
+
+    private static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000042");
+    private static final UUID PATIENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @Test
     @DisplayName("createNew: should create a patient with the given userId and null optional fields")
     void shouldCreateNewPatient() {
-        Patient patient = Patient.createNew(42L);
+        Patient patient = Patient.createNew(USER_ID);
 
         assertThat(patient.getId()).isNull();
-        assertThat(patient.getUserId()).isEqualTo(42L);
+        assertThat(patient.getUserId()).isEqualTo(USER_ID);
         assertThat(patient.getBirthDate()).isNull();
         assertThat(patient.getPhone()).isNull();
         assertThat(patient.getMedicalHistory()).isNull();
@@ -42,7 +42,7 @@ class PatientTest {
     @Test
     @DisplayName("updateProfile: should update all editable fields")
     void shouldUpdateProfile() {
-        Patient patient = Patient.createNew(42L);
+        Patient patient = Patient.createNew(USER_ID);
         OffsetDateTime beforeUpdate = patient.getUpdatedAt();
 
         patient.updateProfile(
@@ -62,7 +62,7 @@ class PatientTest {
     @Test
     @DisplayName("updateProfile: should reject a future birth date")
     void shouldRejectFutureBirthDate() {
-        Patient patient = Patient.createNew(42L);
+        Patient patient = Patient.createNew(USER_ID);
         LocalDate futureDate = LocalDate.now().plusDays(1);
 
         assertThatThrownBy(() ->
@@ -74,7 +74,7 @@ class PatientTest {
     @Test
     @DisplayName("updateProfile: should accept a null birth date")
     void shouldAcceptNullBirthDate() {
-        Patient patient = Patient.createNew(42L);
+        Patient patient = Patient.createNew(USER_ID);
 
         patient.updateProfile(null, "3001234567", null, null);
 
@@ -85,7 +85,7 @@ class PatientTest {
     @Test
     @DisplayName("softDelete: should set deletedAt and updatedAt")
     void shouldSoftDelete() {
-        Patient patient = Patient.createNew(42L);
+        Patient patient = Patient.createNew(USER_ID);
 
         patient.softDelete();
 
@@ -93,15 +93,14 @@ class PatientTest {
         assertThat(patient.getUpdatedAt()).isEqualTo(patient.getDeletedAt());
     }
 
-        @Test
+    @Test
     @DisplayName("softDelete: should be idempotent")
     void softDeleteShouldBeIdempotent() {
-        Patient patient = Patient.createNew(42L);
+        Patient patient = Patient.createNew(USER_ID);
 
         patient.softDelete();
         OffsetDateTime firstDeletedAt = patient.getDeletedAt();
 
-        
         patient.softDelete();
 
         assertThat(patient.getDeletedAt()).isEqualTo(firstDeletedAt);
@@ -114,8 +113,8 @@ class PatientTest {
         OffsetDateTime updatedAt = OffsetDateTime.now().minusDays(2);
 
         Patient patient = Patient.reconstitute(
-                1L,
-                42L,
+                PATIENT_ID,
+                USER_ID,
                 LocalDate.of(1990, 5, 15),
                 "3001234567",
                 "Hypertension",
@@ -125,8 +124,8 @@ class PatientTest {
                 null
         );
 
-        assertThat(patient.getId()).isEqualTo(1L);
-        assertThat(patient.getUserId()).isEqualTo(42L);
+        assertThat(patient.getId()).isEqualTo(PATIENT_ID);
+        assertThat(patient.getUserId()).isEqualTo(USER_ID);
         assertThat(patient.getBirthDate()).isEqualTo(LocalDate.of(1990, 5, 15));
         assertThat(patient.getCreatedAt()).isEqualTo(createdAt);
         assertThat(patient.getUpdatedAt()).isEqualTo(updatedAt);
