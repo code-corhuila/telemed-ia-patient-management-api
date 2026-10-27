@@ -4,14 +4,15 @@ import com.telemedai.patient.domain.model.Patient;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 /**
  * Application-level view of a patient profile.
  * Returned by the use cases and consumed by the REST layer.
  */
 public record PatientResponse(
-        Long id,
-        Long userId,
+        UUID id,
+        UUID userId,
         LocalDate birthDate,
         String phone,
         String medicalHistory,
