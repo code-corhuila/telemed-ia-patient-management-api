@@ -1,14 +1,11 @@
 package com.telemedai.patient.infrastructure.adapters.in.rest;
 
 import com.telemedai.patient.application.dto.CreatePatientCommand;
-import com.telemedai.patient.application.dto.PageResponse;
 import com.telemedai.patient.application.dto.PatientResponse;
 import com.telemedai.patient.application.dto.UpdatePatientCommand;
 import com.telemedai.patient.application.ports.in.CreatePatientPort;
 import com.telemedai.patient.application.ports.in.GetPatientProfilePort;
-import com.telemedai.patient.application.ports.in.ListPatientsPort;
 import com.telemedai.patient.application.ports.in.UpdatePatientProfilePort;
-import com.telemedai.patient.application.usecase.ListPatientsUseCase;
 import com.telemedai.patient.infrastructure.adapters.in.rest.dto.CreatePatientRequest;
 import com.telemedai.patient.infrastructure.adapters.in.rest.dto.UpdatePatientProfileRequest;
 import com.telemedai.patient.infrastructure.config.security.AuthenticatedUser;
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -35,18 +31,15 @@ public class PatientController {
     private final GetPatientProfilePort getPatientProfileUseCase;
     private final UpdatePatientProfilePort updatePatientProfileUseCase;
     private final CreatePatientPort createPatientUseCase;
-    private final ListPatientsPort listPatientsUseCase;
 
     public PatientController(
             GetPatientProfilePort getPatientProfileUseCase,
             UpdatePatientProfilePort updatePatientProfileUseCase,
-            CreatePatientPort createPatientUseCase,
-            ListPatientsPort listPatientsUseCase
+            CreatePatientPort createPatientUseCase
     ) {
         this.getPatientProfileUseCase = getPatientProfileUseCase;
         this.updatePatientProfileUseCase = updatePatientProfileUseCase;
         this.createPatientUseCase = createPatientUseCase;
-        this.listPatientsUseCase = listPatientsUseCase;
     }
 
     @GetMapping("/me")
@@ -93,15 +86,5 @@ public class PatientController {
                 .buildAndExpand(response.id())
                 .toUri();
         return ResponseEntity.created(location).body(response);
-    }
-
-    @GetMapping
-    @PreAuthorize("hasAnyRole('PATIENT','PROFESSIONAL','ADMIN')")
-    public ResponseEntity<PageResponse<PatientResponse>> list(
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "limit", required = false) Integer limit
-    ) {
-        int effectiveLimit = limit != null ? limit : ListPatientsUseCase.defaultLimit();
-        return ResponseEntity.ok(listPatientsUseCase.list(page, effectiveLimit));
     }
 }
