@@ -7,7 +7,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.telemedai.patient.domain.model.Patient;
 import com.telemedai.patient.infrastructure.adapters.out.persistence.JpaPatientRepositoryAdapter;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,20 +30,23 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
 class PatientControllerIT {
+
+    private static final UUID USER_1001 = UUID.fromString("00000000-0000-0000-0000-000000001001");
+    private static final UUID USER_9999 = UUID.fromString("00000000-0000-0000-0000-000000009999");
 
     @Container
     static PostgreSQLContainer<?> postgres =
@@ -65,10 +67,10 @@ class PatientControllerIT {
         }
     }
 
-    private static String jwt(String sub, String role) {
+    private static String jwt(UUID sub, String role) {
         try {
             JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                    .subject(sub)
+                    .subject(sub.toString())
                     .claim("role", role)
                     .expirationTime(Date.from(Instant.now().plusSeconds(300)))
                     .issueTime(new Date())
@@ -96,7 +98,6 @@ class PatientControllerIT {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.flyway.enabled", () -> "false");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        // Placeholder value — the actual bean is overridden by TestSecurityConfig
         registry.add("app.security.jwt.public-key", () -> "placeholder");
     }
 
@@ -108,16 +109,16 @@ class PatientControllerIT {
 
     @BeforeEach
     void setUp() {
-        adapter.save(Patient.createNew(1001L));
+        adapter.save(Patient.createNew(USER_1001));
     }
 
     @Test
     @DisplayName("GET /api/patients/me: should return the authenticated patient's profile")
     void getMyProfile() throws Exception {
         mockMvc.perform(get("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT")))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId", is(1001)))
+                .andExpect(jsonPath("$.userId", is(USER_1001.toString())))
                 .andExpect(jsonPath("$.id", notNullValue()));
     }
 
@@ -125,7 +126,7 @@ class PatientControllerIT {
     @DisplayName("GET /api/patients/me: should return 404 when the patient does not exist")
     void getMyProfileNotFound() throws Exception {
         mockMvc.perform(get("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("9999", "PATIENT")))
+                        .header("Authorization", "Bearer " + jwt(USER_9999, "PATIENT")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", is("NOT_FOUND")));
     }
@@ -143,7 +144,7 @@ class PatientControllerIT {
                 """;
 
         mockMvc.perform(put("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT"))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -162,7 +163,7 @@ class PatientControllerIT {
                 """.formatted(futureDate);
 
         mockMvc.perform(put("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT"))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -182,7 +183,7 @@ class PatientControllerIT {
     void preserves_correlation_id_from_request() throws Exception {
         mockMvc.perform(get("/api/patients/me")
                         .header("X-Correlation-Id", "test-correlation-123")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT")))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT")))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Correlation-Id", "test-correlation-123"));
     }
@@ -191,7 +192,7 @@ class PatientControllerIT {
     @DisplayName("GET /me: generates an X-Correlation-Id when absent")
     void generates_correlation_id_when_absent() throws Exception {
         mockMvc.perform(get("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT")))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT")))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("X-Correlation-Id"));
     }

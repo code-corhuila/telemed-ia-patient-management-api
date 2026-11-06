@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "idempotency_key")
@@ -16,20 +17,20 @@ public class JpaIdempotencyKeyEntity {
     private String key;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name = "resource_id", nullable = false)
-    private Long resourceId;
+    private UUID resourceId;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
     public String getKey() { return key; }
     public void setKey(String key) { this.key = key; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-    public Long getResourceId() { return resourceId; }
-    public void setResourceId(Long resourceId) { this.resourceId = resourceId; }
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
+    public UUID getResourceId() { return resourceId; }
+    public void setResourceId(UUID resourceId) { this.resourceId = resourceId; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }
