@@ -1,14 +1,14 @@
 package com.telemedai.patient.infrastructure.config.security;
 
+import java.util.UUID;
+
 /**
- * Represents the authenticated user identity as extracted from the trusted
- * headers set by the API Gateway.
+ * Represents the authenticated user identity as extracted from the JWT.
  *
- * The API Gateway validates the JWT and injects `X-User-Id` and `X-User-Role`.
- * Direct access to this service is rejected by the `GatewayTrustFilter` unless
- * a valid shared secret header is present.
+ * The `userId` is the Identity `sub` claim (a UUID), which is also the
+ * external reference used by `patients.user_id` in this bounded context.
  */
-public record AuthenticatedUser(Long userId, String role) {
+public record AuthenticatedUser(UUID userId, String role) {
 
     public boolean isPatient() {
         return "PATIENT".equals(role);

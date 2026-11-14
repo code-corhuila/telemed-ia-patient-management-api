@@ -29,6 +29,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -42,6 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Testcontainers
 class PatientControllerAuthorizationIT {
+
+    private static final UUID USER_1001 = UUID.fromString("00000000-0000-0000-0000-000000001001");
 
     @Container
     static PostgreSQLContainer<?> postgres =
@@ -62,10 +65,10 @@ class PatientControllerAuthorizationIT {
         }
     }
 
-    private static String jwt(String sub, String role) {
+    private static String jwt(UUID sub, String role) {
         try {
             JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                    .subject(sub)
+                    .subject(sub.toString())
                     .claim("role", role)
                     .expirationTime(Date.from(Instant.now().plusSeconds(300)))
                     .issueTime(new Date())
@@ -104,7 +107,7 @@ class PatientControllerAuthorizationIT {
 
     @BeforeEach
     void setUp() {
-        adapter.save(Patient.createNew(1001L));
+        adapter.save(Patient.createNew(USER_1001));
     }
 
     // ---------- GET /me ----------
@@ -113,7 +116,7 @@ class PatientControllerAuthorizationIT {
     @DisplayName("GET /me: should return 403 when the role is ADMIN")
     void shouldForbidAdminRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "ADMIN")))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "ADMIN")))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error", is("FORBIDDEN")))
                 .andExpect(jsonPath("$.traceId", notNullValue()))
@@ -124,7 +127,7 @@ class PatientControllerAuthorizationIT {
     @DisplayName("GET /me: should return 403 when the role is PROFESSIONAL")
     void shouldForbidProfessionalRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PROFESSIONAL")))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PROFESSIONAL")))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error", is("FORBIDDEN")));
     }
@@ -133,7 +136,7 @@ class PatientControllerAuthorizationIT {
     @DisplayName("GET /me: should allow the PATIENT role")
     void shouldAllowPatientRole() throws Exception {
         mockMvc.perform(get("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT")))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT")))
                 .andExpect(status().isOk());
     }
 
@@ -156,6 +159,30 @@ class PatientControllerAuthorizationIT {
                 .andExpect(jsonPath("$.error", is("UNAUTHORIZED")));
     }
 
+    @Test
+    @DisplayName("GET /me: should return 401 with a non-UUID sub")
+    void shouldReturn401WithNonUuidSub() throws Exception {
+        String token;
+        try {
+            JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                    .subject("1001")
+                    .claim("role", "PATIENT")
+                    .expirationTime(Date.from(Instant.now().plusSeconds(300)))
+                    .issueTime(new Date())
+                    .build();
+            SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claims);
+            jwt.sign(new RSASSASigner((RSAPrivateKey) KEY_PAIR.getPrivate()));
+            token = jwt.serialize();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        mockMvc.perform(get("/api/patients/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error", is("UNAUTHORIZED")));
+    }
+
     // ---------- PUT /me ----------
 
     @Test
@@ -169,7 +196,7 @@ class PatientControllerAuthorizationIT {
                 """;
 
         mockMvc.perform(put("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "ADMIN"))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isForbidden())
@@ -187,7 +214,7 @@ class PatientControllerAuthorizationIT {
                 """;
 
         mockMvc.perform(put("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PROFESSIONAL"))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PROFESSIONAL"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isForbidden());
@@ -204,7 +231,7 @@ class PatientControllerAuthorizationIT {
                 """;
 
         mockMvc.perform(put("/api/patients/me")
-                        .header("Authorization", "Bearer " + jwt("1001", "PATIENT"))
+                        .header("Authorization", "Bearer " + jwt(USER_1001, "PATIENT"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk());
