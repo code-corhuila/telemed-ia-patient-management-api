@@ -5,6 +5,7 @@ import com.telemedai.patient.domain.exception.InvalidBirthDateException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Patient aggregate root.
@@ -12,11 +13,15 @@ import java.util.Objects;
  * Owns the patient profile lifecycle: creation, profile update, and soft delete.
  * Contains only business rules and does not depend on Spring, JPA, or any other
  * infrastructure technology.
+ *
+ * Identifiers are UUIDs:
+ *   - `id`     internal primary key of the patient record
+ *   - `userId` external reference to the Identity `sub` (JWT subject)
  */
 public class Patient {
 
-    private Long id;
-    private final Long userId;
+    private UUID id;
+    private final UUID userId;
     private LocalDate birthDate;
     private String phone;
     private String medicalHistory;
@@ -26,8 +31,8 @@ public class Patient {
     private OffsetDateTime deletedAt;
 
     private Patient(
-            Long id,
-            Long userId,
+            UUID id,
+            UUID userId,
             LocalDate birthDate,
             String phone,
             String medicalHistory,
@@ -51,7 +56,7 @@ public class Patient {
      * Creates a new patient profile for a given user.
      * The profile starts with empty optional fields.
      */
-    public static Patient createNew(Long userId) {
+    public static Patient createNew(UUID userId) {
         Objects.requireNonNull(userId, "userId must not be null");
         OffsetDateTime now = OffsetDateTime.now();
         return new Patient(null, userId, null, null, null, null, now, now, null);
@@ -62,8 +67,8 @@ public class Patient {
      * Used by persistence adapters when loading from the database.
      */
     public static Patient reconstitute(
-            Long id,
-            Long userId,
+            UUID id,
+            UUID userId,
             LocalDate birthDate,
             String phone,
             String medicalHistory,
@@ -114,11 +119,11 @@ public class Patient {
 
     // Getters
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public Long getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 

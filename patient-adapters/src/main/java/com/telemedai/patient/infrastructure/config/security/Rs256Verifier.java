@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class Rs256Verifier {
@@ -78,11 +79,11 @@ public class Rs256Verifier {
             throw new InvalidTokenException("missing sub");
         }
 
-        Long userId;
+        UUID userId;
         try {
-            userId = Long.parseLong(subject);
-        } catch (NumberFormatException e) {
-            throw new InvalidTokenException("sub must be a numeric user id");
+            userId = UUID.fromString(subject);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidTokenException("sub must be a UUID");
         }
 
         return new AuthenticatedUser(userId, extractRole(claims));

@@ -15,7 +15,6 @@
     <artifactId>patient-management-api-parent</artifactId>
     <version>0.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-
     <name>telemed-ia-patient-management-api</name>
     <description>Patient management bounded context for TeleMed IA</description>
 
